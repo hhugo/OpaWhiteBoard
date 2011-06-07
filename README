@@ -1,0 +1,16 @@
+Collaborative white board
+
+BUILDING
+ make
+
+LAUNCHING
+ ./opawhiteboard.exe
+(launches on port 8080)
+or
+ ./opawhiteboard.exe -p nnnn
+
+Once started you can start drawing with people but it will not support reloading.
+In order to do so, start a browser at the following adress:
+http://myhost:myport/i_m_a_builder
+it aims to build the image and send it back to the server.
+When we have an image manipulation library on server side, it won't be needed anymore.
