@@ -231,5 +231,5 @@ sendit_server(email,img)=
         email,
         "Piece of art",
         {text=content},
-        [{filename="masterpiece.png" content=img base="base64" mime_type="image/png"}],
+        [{filename="masterpiece.png" content=img encoding="base64" mime_type="image/png"}],
         (_ -> void) )
