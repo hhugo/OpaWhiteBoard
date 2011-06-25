@@ -28,7 +28,7 @@ import stdlib.web.mail
  * This will send messages to the server a most every 250 ms
  */
 @client
-atoms_sess = SessionBuffer.make_send_to(Session.make_callback(l -> NetworkBuffer.broadcast(l,atoms_network)),250)
+atoms_sess : channel(list(line))=SessionBuffer.make_send_to(Session.make_callback(l -> NetworkBuffer.broadcast(l,atoms_network)),250)
 
 /*
  * Send a line to the server
@@ -80,7 +80,7 @@ initialize_client(atoms) =
                    {unchanged}
             end
           treat_msg   = Session.make(({x_px=0 y_px=0},Color.black,5), dispatch)
-          treat_atoms = Session.make_callback( atoms -> List.iter(atom -> Session.send(treat_msg,{line=atom}),List.rev(atoms)))
+          treat_atoms =  Session.make_callback( atoms -> List.iter(atom -> Session.send(treat_msg,{line=atom}),List.rev(atoms)))
           // add drawing tools
           // color picker
           style_colorpick ={ thumb = WStyler.make_class(["cp_thumb"])
@@ -144,16 +144,7 @@ initialize_client(atoms) =
  */
 
 main() =
-
-  // Get the initial state
-  (atoms,image) = get_state()
-
-  //If there is an image, we load it with <img ..>
-  cur_image =
-    if image == ""
-    then <div onready={_ -> initialize_client(atoms)} style="display:none;"/>
-    else <img id="initial_image" width="{canvas_width}" height="{canvas_height}" onready={_ -> initialize_client(atoms)} src="{image}" />;
-
+  atoms=[]
   //chat creation
   chat=
     id = Random.string(8)
@@ -171,7 +162,7 @@ main() =
       <div id="content">
         <div id="canvas_wrapper" width="{canvas_width}" height="{canvas_height}" >
           <canvas id="canvas"  width="{canvas_width}" height="{canvas_height}"></canvas>
-          {cur_image}
+          <img id="initial_image" width="{canvas_width}" height="{canvas_height}" onload={_ -> initialize_client(atoms)} src="img.png" />
         </div>
         <div id="drawing_tools" />
       </div>

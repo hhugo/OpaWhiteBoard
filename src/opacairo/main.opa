@@ -26,6 +26,23 @@ import stdlib.widgets.{slider,colorpicker}
  */
 type line = (Dom.Dimension.t, Dom.Dimension.t, Color.color, int)
 
+type Canvas.surface = external
+type Canvas.ctx = external
+
+/*
+ * Size of the board
+ */
+@both_implem
+canvas_width = 600.
+@both_implem
+canvas_height = 450.
+
+@server
+surface = (%% Cairo.create_surface %%)(Int.of_float(canvas_width),Int.of_float(canvas_height)) 
+context = (%% Cairo.create %%)(surface)
+
+
+
 /*
  * Network to broadcast line.
  * Special Network Implem to decrease the among of request
@@ -33,14 +50,23 @@ type line = (Dom.Dimension.t, Dom.Dimension.t, Color.color, int)
 @server @publish
 atoms_network : NetworkBuffer.network(line) = NetworkBuffer.empty(333)
 
-/*
- * Internal state (list of line + image)
- * The image is build by applying patch to the previous image
- */
-@server @publish
-state = Mutable.make(([] : list(line) ,""))
-@server
-get_state() = state.get()
+f(size,co,x1,y1,x2,y2) =
+  fl=Float.of_int
+  flc(i)=fl(i) / 255.
+  size=Float.of_int(size)
+  do (%% Cairo.set_stroke_style_color %%)(context,flc(co.r),flc(co.g),flc(co.b))
+  do (%% Cairo.set_line_width %%)(context,size)
+  do (%% Cairo.draw %%)(context,fl(x1),fl(y1),fl(x2),fl(y2))
+  void
+
+ttt : channel(list(line)) = Session.make_callback(
+    l ->
+  do Log.warning("CANVAS","update")
+  List.iter((from,to,co,size) ->
+    f(size,co,from.x_px,from.y_px,to.x_px,to.y_px),
+    l))
+
+do NetworkBuffer.add(ttt,atoms_network)
 
 /*
  * Initialisation of chat component
@@ -49,25 +75,29 @@ get_state() = state.get()
 default_chat = CChat.init(CChat.default_config(Random.string(10)))
 
 /*
- * Size of the board
- */
-@both_implem
-canvas_width = 600
-@both_implem
-canvas_height = 450
-
-/*
  * Main
  */
 resources = @static_include_directory("resources")
 rule_map = Rule.of_map(resources) : Parser.general_parser(resource)
 urls = parser
   | "/" -> Resource.full_page("Play with Canvas",main(),<link rel="stylesheet" href="style.css" type="text/css"> </link>,{success}, [])
-  | "/i_m_a_builder" -> html("Canvas builder", build())
+  | "/img.png" -> Resource.dyn_image({png=(%% Cairo.to_data %%)(surface)})
   | "/style.css" -> Resource.source(@static_content("resources/style.css")(),"text/css")
   | "/" r=rule_map -> r
 
 
 server = Server.simple_server(urls)
 
+@server
+atoms_sess2 : channel(list(line)) = SessionBuffer.make_send_to(Session.make_callback(l -> NetworkBuffer.broadcast(l,atoms_network)),250)
 
+@server
+color_random()=
+  r()=Random.int(255)
+  {r=r() g=r() b=r() a=255}
+@server
+_ = Scheduler.timer(100, ->
+    rand(size) = Random.int(Int.of_float(size))
+    rand_dim() = {x_px=rand(canvas_width) y_px=rand(canvas_height)}
+    
+    Session.send(atoms_sess2,[(rand_dim(), rand_dim(), color_random(), Random.int(50))]))
