@@ -61,7 +61,6 @@ f(size,co,x1,y1,x2,y2) =
 
 ttt : channel(list(line)) = Session.make_callback(
     l ->
-  do Log.warning("CANVAS","update")
   List.iter((from,to,co,size) ->
     f(size,co,from.x_px,from.y_px,to.x_px,to.y_px),
     l))
@@ -91,13 +90,13 @@ server = Server.simple_server(urls)
 @server
 atoms_sess2 : channel(list(line)) = SessionBuffer.make_send_to(Session.make_callback(l -> NetworkBuffer.broadcast(l,atoms_network)),250)
 
-@server
-color_random()=
-  r()=Random.int(255)
-  {r=r() g=r() b=r() a=255}
-@server
-_ = Scheduler.timer(100, ->
-    rand(size) = Random.int(Int.of_float(size))
-    rand_dim() = {x_px=rand(canvas_width) y_px=rand(canvas_height)}
+// @server
+// color_random()=
+//   r()=Random.int(255)
+//   {r=r() g=r() b=r() a=255}
+// @server
+// _ = Scheduler.timer(100, ->
+//     rand(size) = Random.int(Int.of_float(size))
+//     rand_dim() = {x_px=rand(canvas_width) y_px=rand(canvas_height)}
     
-    Session.send(atoms_sess2,[(rand_dim(), rand_dim(), color_random(), Random.int(50))]))
+//     Session.send(atoms_sess2,[(rand_dim(), rand_dim(), color_random(), Random.int(50))]))

@@ -72,6 +72,7 @@ initialize_client(atoms) =
                  | {~set_color} -> {set=(pos,set_color,size)} //change color
                  | {~set_pos} -> {set=(set_pos,color,size)}   //change positon
                  | {~move} ->                                 //move to the new positon
+                   do Log.info("change_size","{size}")
                    do draw_line(ctx, pos,move,color,size)
                    do send_line(pos,move,color,size)
                    {set=(move,color,size)}
@@ -79,7 +80,8 @@ initialize_client(atoms) =
                    do draw_line(ctx, p1, p2, color, size)
                    {unchanged}
             end
-          treat_msg   = Session.make(({x_px=0 y_px=0},Color.black,5), dispatch)
+          slider_size = 5
+          treat_msg   = Session.make(({x_px=0 y_px=0},Color.black,slider_size), dispatch)
           treat_atoms =  Session.make_callback( atoms -> List.iter(atom -> Session.send(treat_msg,{line=atom}),List.rev(atoms)))
           // add drawing tools
           // color picker
@@ -99,7 +101,7 @@ initialize_client(atoms) =
                            thumb_over = WStyler.make_class(["thumb_over"])
                            gauge = WStyler.make_class(["gauge"])
                          }
-          change_size(set_size) = Session.send(treat_msg, {~set_size})
+          change_size(set_size) = do Log.info("change_size","{set_size}") Session.send(treat_msg, {~set_size})
           config_slider = { style=style_slider on_change=change_size on_release=change_size range=(1,50) init=5 step=2}
           slider = WSlider.html(config_slider, "{id}_size")
 
@@ -117,7 +119,7 @@ initialize_client(atoms) =
           //register session to reveive updates
           do NetworkBuffer.add(treat_atoms,atoms_network)
           //Initial state
-          do Session.send(treat_msg, {set_size=String.to_int(Dom.get_value(#slider))})
+          do Session.send(treat_msg, {set_size=slider_size})
           do Session.send(treat_msg, {set_color=Color.darkblue})
 
           //function call when drawing
