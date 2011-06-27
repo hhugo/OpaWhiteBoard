@@ -164,7 +164,7 @@ main() =
       <div id="content">
         <div id="canvas_wrapper" width="{canvas_width}" height="{canvas_height}" >
           <canvas id="canvas"  width="{canvas_width}" height="{canvas_height}"></canvas>
-          <img id="initial_image" width="{canvas_width}" height="{canvas_height}" onload={_ -> initialize_client(atoms)} src="img.png" />
+          <img id="initial_image" width="{canvas_width}" height="{canvas_height}" onready={_ -> Scheduler.sleep(1000,->initialize_client(atoms))} src="img.png" />
         </div>
         <div id="drawing_tools" />
       </div>
