@@ -153,7 +153,7 @@ main() =
     config = CChat.default_config(id)
     initial_content = default_chat.requester({ range = (0, config.history_limit) })
     initial_display = {CChat.default_display(id, Random.string(8)) with reverse=false}
-    CChat.create(config, default_chat, id, initial_display, initial_content, ignore)
+    CChat.create(config, default_chat, id, initial_display, initial_content, (_,_ -> void ) )
 
   //main content
   <>
