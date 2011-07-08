@@ -15,4 +15,4 @@ opawhiteboard.exe: cairo.opp
 	$(OPA) $(INCLUDE) $(LINK) cairo.opp src/opacairo/buffer.opa src/opacairo/client.opa src/opacairo/main.opa -o opawhiteboard.exe
 
 clean:
-	rm -Rf *.exe _build _tracks *.log
+	rm -Rf *.exe _build _tracks *.log *.opp
