@@ -74,10 +74,11 @@ h1, h2, h3, h4, h5 {font-family: "proxima-nova", "Avenir", "Futura", "Helvetica"
      text-align: left;
 }
 #logo {
-     background: url("/resources/opa-logo.png") no-repeat 0 0;
-     height: 41px;
+     background: url("http://opalang.org/img/opa-logo-orange.png") no-repeat 0 0;
+     height: 60px;
      margin: 5px 0 15px;
-     width: 100px;
+     padding-left: 100px;
+     width: 400px;
 }
 
 /*CHAT*/
