@@ -49,8 +49,23 @@ context = (%% Cairo.create %%)(surface)
  */
 @server @publish
 atoms_network : NetworkBuffer.network(line) = NetworkBuffer.empty(333)
+@server @publish
+count_client_distance : Network.network((int,int)) = Network.empty()
+@server @publish
+dist = Session.make((0,0), ((nb,dist),msg ->
+  match msg with
+    | {new} -> {set=(nb+1,dist)}
+    | {dump} -> do Network.broadcast((nb,dist),count_client_distance) {unchanged}
+    | {~add} -> {set=(nb,dist+add)}
+    | {rem} -> {set=(nb-1,dist)}))
+
+do Scheduler.timer(500,-> Session.send(dist,{dump}))
 
 f(size,co,x1,y1,x2,y2) =
+  dx = (x1-x2)
+  dy = (y1-y2)
+  d = Math.sqrt_f(Float.of_int(dx*dx + dy*dy))
+  do Session.send(dist,{add=Int.of_float(d)})
   fl=Float.of_int
   flc(i)=fl(i) / 255.
   size=Float.of_int(size)

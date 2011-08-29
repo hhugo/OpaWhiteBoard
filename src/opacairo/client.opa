@@ -37,6 +37,23 @@ atoms_sess : channel(list(line))=SessionBuffer.make_send_to(Session.make_callbac
 send_line(p1, p2, color : Color.color, size : int) : void =
   Session.send(atoms_sess,[(p1, p2, color, size)])
 
+@client
+_ = Session.send(dist,{new})
+
+@client
+info = 
+  Session.make_callback((nb : int,dist: int) -> Dom.transform([
+   #nb_user <- nb,
+   #distance <- dist]))
+@client
+_ = Network.add(info, count_client_distance)
+@client
+_ =  Scheduler.push(-> remove(info))
+
+@server @publish
+remove(x)=Session.on_remove(x, -> Session.send(dist,{rem}))
+
+
 /*
  * Draw a line into the canvas
  */
@@ -181,6 +198,10 @@ Head to <a href="http://opalang.org">http://opalang.org</a> to learn how to prog
         <input type="text" id="myemail" placeholder="your email here" />
         <input type="button" onclick={sendit} value="send it"/>
         <span id="sent"></span>
+      </div>
+      <div id="stats">
+        <p> users: <span id=#nb_user /></p>
+        <p> distance: <span id=#distance /></p>
       </div>
       <div class="source">Get the sources and fork on <a href="https://github.com/hhugo/OpaWhiteBoard">Github</a></div>
     </div>
