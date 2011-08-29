@@ -161,6 +161,7 @@ main() =
       <div id="header">
         <div id="logo">
 	   <p>This is a demo application of the open source Opa technology.
+           <br />
 Head to <a href="http://opalang.org">http://opalang.org</a> to learn how to program real-time, distributed, web applications.</p>
 	</div>
       </div>
@@ -181,7 +182,7 @@ Head to <a href="http://opalang.org">http://opalang.org</a> to learn how to prog
         <input type="button" onclick={sendit} value="send it"/>
         <span id="sent"></span>
       </div>
-      <div>Get the sources and fork on <a href="https://github.com/hhugo/OpaWhiteBoard">Github</a></div>
+      <div class="source">Get the sources and fork on <a href="https://github.com/hhugo/OpaWhiteBoard">Github</a></div>
     </div>
   </>
 

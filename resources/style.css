@@ -51,7 +51,19 @@ table {
 }
 .search_container {display:none;}
 
-#sendit {clear: both;display: block;padding: 10px;text-align: left;}
+#sendit {
+    clear: both;
+    display: block;
+    float: left;
+    padding: 10px;
+    text-align: left;
+}
+
+div.source{
+    float: right;
+    padding: 10px 20px 10px 10px;
+    text-align: right;
+}
 
 table td {vertical-align:top;border-bottom: 1px solid #c6c6c2;padding: 3px;color: #767672;font-size:0.9em;}
 table td:after {border-bottom: 1px solid #FFF;content:"";position:relative;top:5px;display:block;}
@@ -68,17 +80,21 @@ h1, h2, h3, h4, h5 {font-family: "proxima-nova", "Avenir", "Futura", "Helvetica"
 
 /***Header***/
 #header {
-     margin: 0;
-     padding: 10px;
-     position: relative;
-     text-align: left;
+    color: #A6A6A2;
+    font-family: "proxima-nova","Avenir","Futura","Helvetica","Arial",sans-serif;
+    font-size: 1.2em;
+    line-height: 1.3em;
+    margin: 0;
+    padding: 10px;
+    position: relative;
+    text-align: left;
 }
 #logo {
-     background: url("http://opalang.org/img/opa-logo-orange.png") no-repeat 0 0;
-     height: 60px;
-     margin: 5px 0 15px;
-     padding-left: 100px;
-     width: 400px;
+    background: url("http://opalang.org/img/opa-logo-orange.png") no-repeat scroll 0 0 transparent;
+    height: 60px;
+    margin: 5px 0 0 0;
+    padding-left: 110px;
+    width: 800px;
 }
 
 /*CHAT*/
