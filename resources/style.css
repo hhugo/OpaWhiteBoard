@@ -58,17 +58,16 @@ table {
     padding: 10px;
     text-align: left;
 }
-
 #stats {
-    float: left;
-    padding: 1Opx;
-    margin-left: 50px;
+float: left;
+padding: 10px;
+margin-left: 210px;
 }
 
 #stats p {
-display: block;
+display: inline;
 width: 150px;
-margin: 0px;
+margin: 0 10px 0 0;
 padding: 0px;
 text-align: left;
 }

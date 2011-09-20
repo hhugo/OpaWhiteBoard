@@ -45,7 +45,7 @@ type NetworkBuffer.instruction('a) = {add: SessionBuffer.channel('a)} / {remove:
 NetworkBuffer = {{
   @publish
   empty(timer : int): NetworkBuffer.network('a) =
-    Set = Set_make(channel_order)
+    Set = Set_make(Channel.order)
     rec val own = Session.make((Set.empty,[]),
           ((chans,lst), msg ->
                    match msg with
