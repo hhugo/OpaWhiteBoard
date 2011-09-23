@@ -72,6 +72,20 @@ padding: 0px;
 text-align: left;
 }
 
+#stats {
+    float: left;
+    padding: 1Opx;
+    margin-left: 50px;
+}
+
+#stats p {
+display: block;
+width: 150px;
+margin: 0px;
+padding: 0px;
+text-align: left;
+}
+
 div.source{
     float: right;
     padding: 10px 20px 10px 10px;

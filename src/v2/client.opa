@@ -21,42 +21,30 @@
 import stdlib.widgets.core
 import stdlib.components.chat
 import stdlib.web.mail
+import stdlib.web.canvas
 
-/*
- * Create a client session to send new line to the server
- * Special session implem to decrease the amount of request
- * This will send messages to the server a most every 250 ms
- */
-@client
-atoms_sess : channel(list(line))=SessionBuffer.make_send_to(Session.make_callback(l -> NetworkBuffer.broadcast(l,atoms_network)),250)
 
 /*
  * Send a line to the server
  */
+
+@client
+client_flow : Buffer.t(line) = Buffer.make()
+
 @client
 send_line(p1, p2, color : Color.color, size : int) : void =
-  Session.send(atoms_sess,[(p1, p2, color, size)])
-
+  Buffer.add(client_flow,(p1, p2, color, size))
 
 @client
-_ =
-  info = Session.make_callback((nb : int,dist: int) ->
-    Dom.transform([
-      #nb_user <- nb,
-      #distance <- dist]))
-  do register_to_server(info)
-  void
-@server @publish
-register_to_server(info)=
-  _ = Session.on_remove(info, ->
-    do println("client disconnected")
-    Session.send(dist,{rem}))
-  _ = Session.send(dist,{new})
-  _ = Network.add(info, count_client_distance)
-  void
+_ = Scheduler.timer(300,->
+  Buffer.flush(client_flow,(l->
+    if not(List.is_empty(l))
+    then drawing(l))))
+
 /*
  * Draw a line into the canvas
  */
+
 @client
 draw_line(ctx, p1, p2, color : Color.color, size : int) : void =
   do Canvas.begin_path(ctx);
@@ -71,7 +59,7 @@ draw_line(ctx, p1, p2, color : Color.color, size : int) : void =
  * Initialize the client when ready
  */
 @client
-initialize_client(atoms) =
+initialize_client() =
   id = Random.string(10)
   //get canvas
   match Canvas.get(#canvas) with
@@ -81,10 +69,14 @@ initialize_client(atoms) =
         | {some=ctx} ->
           //set canvas style
           do Canvas.set_line_cap(ctx, {round})
-
           //Session store canvas state
           dispatch((pos,color,size), msg ) =
             match msg with
+                 | {metric=(nb,dist)} ->
+                   do Dom.transform([
+                     #nb_user <- nb,
+                     #distance <- dist])
+                   {unchanged}
                  | {~set_size} -> {set=(pos,color,set_size)}  //change cursor size
                  | {~set_color} -> {set=(pos,set_color,size)} //change color
                  | {~set_pos} -> {set=(set_pos,color,size)}   //change positon
@@ -99,7 +91,8 @@ initialize_client(atoms) =
             end
           slider_size = 5
           treat_msg   = Session.make(({x_px=0 y_px=0},Color.black,slider_size), dispatch)
-          treat_atoms =  Session.make_callback( atoms -> List.iter(atom -> Session.send(treat_msg,{line=atom}),List.rev(atoms)))
+          treat_lines = Session.make_callback(List.iter(line -> Session.send(treat_msg,{~line}),_))
+          treat_metric = Session.make_callback(metric -> Session.send(treat_msg,{~metric}))
           // add drawing tools
           // color picker
           style_colorpick ={ thumb = WStyler.make_class(["cp_thumb"])
@@ -133,10 +126,9 @@ initialize_client(atoms) =
             | {some=img} -> do Canvas.draw_image(ctx, img, 0, 0)
                             Dom.hide(#initial_image)
             | {none} ->  Log.debug("draw image","empty")
-          //apply patches if any
-          do Session.send(treat_atoms, atoms)
           //register session to reveive updates
-          do NetworkBuffer.add(treat_atoms,atoms_network)
+          do Network.add(treat_lines,lines_network)
+          do register_to_server(treat_metric)
           //Initial state
           do Session.send(treat_msg, {set_size=slider_size})
           do Session.send(treat_msg, {set_color=Color.darkblue})
@@ -160,12 +152,12 @@ initialize_client(atoms) =
     | {none} -> Log.debug("canvas","error")
   end
 
+
 /*
  * Main page
  */
-
+@server
 main() =
-  atoms=[]
   //chat creation
   chat=
     id = Random.string(8)
@@ -179,15 +171,18 @@ main() =
     <div id="container">
       <div id="header">
         <div id="logo">
-	   <p>This is a demo application of the open source Opa technology.
-           <br />
-Head to <a href="http://opalang.org">http://opalang.org</a> to learn how to program real-time, distributed, web applications.</p>
-	</div>
+           <p>This is a demo application of the open source Opa technology.
+             <br />
+             Head to <a href="http://opalang.org">http://opalang.org</a>
+              to learn how to program real-time, distributed, web applications.
+           </p>
+        </div>
       </div>
       <div id="content">
         <div id="canvas_wrapper" width="{canvas_width}" height="{canvas_height}" >
           <canvas id="canvas"  width="{canvas_width}" height="{canvas_height}"></canvas>
-          <img id="initial_image" width="{canvas_width}" height="{canvas_height}" onready={_ -> Scheduler.sleep(1000,->initialize_client(atoms))} src="img.png" />
+          <img id="initial_image" width="{canvas_width}" height="{canvas_height}"
+            onready={_ -> Scheduler.sleep(800,->initialize_client())} src="img.png" />
         </div>
         <div id="drawing_tools" />
       </div>
@@ -205,7 +200,9 @@ Head to <a href="http://opalang.org">http://opalang.org</a> to learn how to prog
         <p> users: <span id=#nb_user /></p>
         <p> distance: <span id=#distance /></p>
       </div>
-      <div class="source">Get the sources and fork on <a href="https://github.com/hhugo/OpaWhiteBoard">Github</a></div>
+      <div class="source">
+        Get the sources and fork on
+        <a href="https://github.com/hhugo/OpaWhiteBoard">Github</a></div>
     </div>
   </>
 
@@ -241,16 +238,3 @@ sendit(_)=
     | _ -> void
   end
 
-
-@server @publish
-sendit_server(email,img)=
-      img = String.drop_left(22,img) //in order to drop "data:image/png;base64,"
-      content =
-        "Here is your masterpiece\n\nThanks"
-      Email.try_send_with_files_async(
-        Email.of_string("canvas@opalang.org"),
-        email,
-        "Piece of art",
-        {text=content},
-        [{filename="masterpiece.png" content=img encoding="base64" mime_type="image/png"}],
-        (_ -> void) )
