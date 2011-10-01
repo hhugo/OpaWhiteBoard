@@ -47,17 +47,25 @@ context = (%% Cairo.create %%)(surface)
  * Network to broadcast line.
  * Special Network Implem to decrease the among of request
  */
+type info_msg =
+  {new}
+/ {dump}
+/ {rem}
+/ {add:int}
 @server @publish
 atoms_network : NetworkBuffer.network(line) = NetworkBuffer.empty(333)
 @server @publish
 count_client_distance : Network.network((int,int)) = Network.empty()
 @server @publish
-dist = Session.make((0,0), ((nb,dist),msg ->
+dist = Session.make((0,0,false), ((nb,d,updt),msg : info_msg ->
   match msg with
-    | {new} -> {set=(nb+1,dist)}
-    | {dump} -> do Network.broadcast((nb,dist),count_client_distance) {unchanged}
-    | {~add} -> {set=(nb,dist+add)}
-    | {rem} -> {set=(nb-1,dist)}))
+    | {new} ->
+      {set=(nb+1,d,true)}
+    | {dump} -> do if updt
+                   then Network.broadcast((nb,d),count_client_distance)
+                {set=(nb,d,false)}
+    | {~add} -> {set=(nb,d+add,true)}
+    | {rem} -> {set=(nb-1,d,false)}))
 
 do Scheduler.timer(500,-> Session.send(dist,{dump}))
 

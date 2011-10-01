@@ -37,23 +37,23 @@ atoms_sess : channel(list(line))=SessionBuffer.make_send_to(Session.make_callbac
 send_line(p1, p2, color : Color.color, size : int) : void =
   Session.send(atoms_sess,[(p1, p2, color, size)])
 
-@client
-_ = Session.send(dist,{new})
 
 @client
-info = 
-  Session.make_callback((nb : int,dist: int) -> Dom.transform([
-   #nb_user <- nb,
-   #distance <- dist]))
-@client
-_ = Network.add(info, count_client_distance)
-@client
-_ =  Scheduler.push(-> remove(info))
-
+_ =
+  info = Session.make_callback((nb : int,dist: int) ->
+    Dom.transform([
+      #nb_user <- nb,
+      #distance <- dist]))
+  do register_to_server(info)
+  void
 @server @publish
-remove(x)=Session.on_remove(x, -> Session.send(dist,{rem}))
-
-
+register_to_server(info)=
+  _ = Session.on_remove(info, ->
+    do println("client disconnected")
+    Session.send(dist,{rem}))
+  _ = Session.send(dist,{new})
+  _ = Network.add(info, count_client_distance)
+  void
 /*
  * Draw a line into the canvas
  */
@@ -89,7 +89,7 @@ initialize_client(atoms) =
                  | {~set_color} -> {set=(pos,set_color,size)} //change color
                  | {~set_pos} -> {set=(set_pos,color,size)}   //change positon
                  | {~move} ->                                 //move to the new positon
-                   do Log.info("change_size","{size}")
+                   //do Log.info("change_size","{size}")
                    do draw_line(ctx, pos,move,color,size)
                    do send_line(pos,move,color,size)
                    {set=(move,color,size)}
@@ -118,7 +118,9 @@ initialize_client(atoms) =
                            thumb_over = WStyler.make_class(["thumb_over"])
                            gauge = WStyler.make_class(["gauge"])
                          }
-          change_size(set_size) = do Log.info("change_size","{set_size}") Session.send(treat_msg, {~set_size})
+          change_size(set_size) =
+            //do Log.info("change_size","{set_size}")
+            Session.send(treat_msg, {~set_size})
           config_slider = { style=style_slider on_change=change_size on_release=change_size range=(1,50) init=5 step=2}
           slider = WSlider.html(config_slider, "{id}_size")
 
